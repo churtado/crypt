@@ -9,17 +9,19 @@ salt_size = nacl.pwhash.argon2i.SALTBYTES
 
 print('Decryption utility')
 
-print('reading password...')
-password = 'hello'.encode('utf-8')
+# input password
+password = input('input password:')
+password = password.encode('utf-8')
 
 # generate and print salt
 print('reading salt...')
-salt = base64.b64decode(b'OinavmSHZX7Ips/GLK/IAQ==')
+salt_file = open('salt', 'r')
+salt = base64.b64decode(salt_file.read())
 
-print('generating key...')
 # generate key
+print('generating key...')
 key = kdf(nacl.secret.SecretBox.KEY_SIZE, password, salt)
-print('key generated. Decrypting file...')
+print('key generated. Opening file...')
 
 # setting up encryption tools
 box = nacl.secret.SecretBox(key)
@@ -30,13 +32,14 @@ encrypted = base64.b64decode(input_file.read())
 # encrypt key and value
 input_file.close()
 
-output_file = open('decrypted', 'w')
+print('contents read. Decrypting...')
 plaintext = box.decrypt(encrypted)
+
+print('contents decrypted. Saving to file...')
+output_file = open('decrypted', 'w')
 lines = plaintext.decode().split('\n')
-print(lines)
 for line in lines:
     output_file.write(line + '\n')
-
 output_file.close()
 
-print('contents decrypted and saved')
+print('contents decrypted and saved to file. Exiting...')

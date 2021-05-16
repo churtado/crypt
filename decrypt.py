@@ -8,6 +8,7 @@ kdf = nacl.pwhash.argon2i.kdf
 salt_size = nacl.pwhash.argon2i.SALTBYTES
 
 print('Decryption utility')
+print('using XSalsa20 stream cipher and Poly1305 MAC authentication via PyNaCl')
 
 # input password
 password = input('input password:')

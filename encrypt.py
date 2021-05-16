@@ -32,19 +32,13 @@ box = nacl.secret.SecretBox(key)
 
 # read passwd.txt file
 input_file = open('passwd.txt', 'r')
-lines = input_file.readlines()
+p = input_file.read()
 
 output_file = open('passwd', 'wb')
- 
-for line in lines:
-    # split into array
-    l = line.split()
-
-    # encrypt key and value
-    key = box.encrypt(l[0].encode('utf-8'))
-    value = box.encrypt(l[1].encode('utf-8'))
-    output_file.write(base64.b64encode(key)) 
-    output_file.write(base64.b64encode(value))
+# encrypt contents
+encrypted = box.encrypt(p.encode('utf-8')) 
+# output to file
+output_file.write(base64.b64encode(encrypted)) 
 input_file.close()
 
 print('contents encrypted and saved')

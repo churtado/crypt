@@ -5,46 +5,38 @@ import base64
 
 # key derivation function
 kdf = nacl.pwhash.argon2i.kdf
+salt_size = nacl.pwhash.argon2i.SALTBYTES
 
-print('Encryption utility. Starting encryption...')
+print('Decryption utility')
 
-# get key
+print('reading password...')
 password = 'hello'.encode('utf-8')
 
 # generate and print salt
-salt_size = nacl.pwhash.argon2i.SALTBYTES
-print('salt size:{}'.format(salt_size))
+print('reading salt...')
+salt = base64.b64decode(b'OinavmSHZX7Ips/GLK/IAQ==')
 
-salt = nacl.utils.random(salt_size)
-print('saving salt to file...')
-salt_file = open('salt', 'wb')
-salt_file.write(base64.b64encode(salt))
-salt_file.close()
-# TODO write the salt to a file
-print('salt saved. Obtaining key...')
-
+print('generating key...')
 # generate key
 key = kdf(nacl.secret.SecretBox.KEY_SIZE, password, salt)
-print('key obtained. Encrypting and writing to file...')
+print('key generated. Decrypting file...')
 
 # setting up encryption tools
 box = nacl.secret.SecretBox(key)
 
-# read passwd.txt file
-input_file = open('passwd.txt', 'r')
-lines = input_file.readlines()
-
-output_file = open('passwd', 'wb')
- 
-for line in lines:
-    # split into array
-    l = line.split()
-
-    # encrypt key and value
-    key = box.encrypt(l[0].encode('utf-8'))
-    value = box.encrypt(l[1].encode('utf-8'))
-    output_file.write(base64.b64encode(key)) 
-    output_file.write(base64.b64encode(value))
+# read passwd file
+input_file = open('passwd', 'r')
+encrypted = base64.b64decode(input_file.read())
+# encrypt key and value
 input_file.close()
 
-print('contents encrypted and saved')
+output_file = open('decrypted', 'w')
+plaintext = box.decrypt(encrypted)
+lines = plaintext.decode().split('\n')
+print(lines)
+for line in lines:
+    output_file.write(line + '\n')
+
+output_file.close()
+
+print('contents decrypted and saved')

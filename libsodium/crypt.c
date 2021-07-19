@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
         (unsigned char *)key);
 
     printf("encrypted: %s\n", ciphertext);
-    
+
     // write encrypted contents to file
     FILE *e;
     if ((e = fopen("passwd", "wb")) == NULL) {
@@ -119,20 +119,56 @@ int main(int argc, char *argv[]) {
     length = 0;
 
     // read nonce
-    strcpy((char *)nonce, read_file((char *)nonce, "nonce", &length));
+    buffer = 0;
+    FILE *f = fopen("nonce", "rb");
+
+    if (f) {
+      fseek(f, 0, SEEK_END);
+      length = ftell(f);
+      fseek(f, 0, SEEK_SET);
+      buffer = malloc(length);
+      if (buffer) {
+        fread(buffer, 1, length, f);
+        strcpy((char *)nonce, buffer);
+      }
+      fclose(f);
+    } else {
+      printf("Error reading nonce");
+      return 1;
+    }
     printf("nonce read successfully. Reading encrypted contents...\n");
 
-    buffer = read_file(buffer, "passwd", &length);
-    printf("encrypted contents read successfully\n");
-    unsigned char decrypted[length];
-    unsigned long long decrypted_len;
-    printf("decrypting contents...\n");
-    if (crypto_aead_xchacha20poly1305_ietf_decrypt(
-            decrypted, &decrypted_len, NULL, (unsigned char *)buffer, length,
-            ADDITIONAL_DATA, ADDITIONAL_DATA_LEN, nonce,
-            (unsigned char *)key) != 0) {
-      printf("File contents:\n%s", decrypted);
-      printf("contents decrypted successfully\n");
+    // read encrypted file
+    buffer = 0;
+    f = fopen("passwd", "rb");
+
+    if (f) {
+      fseek(f, 0, SEEK_END);
+      length = ftell(f);
+      unsigned char
+          ciphertext[length + crypto_aead_xchacha20poly1305_ietf_ABYTES];
+      fseek(f, 0, SEEK_SET);
+      buffer = malloc(length);
+      if (buffer) {
+        fread(buffer, 1, length, f);
+        strcpy((char *)ciphertext, buffer);
+        printf("encrypted file read successfully. Reading encrypted "
+               "contents...\n");
+        //        printf("%s\n", ciphertext);
+        // unsigned char decrypted[length];
+        // unsigned long long decrypted_len;
+        // printf("decrypting contents...\n");
+        // if (crypto_aead_xchacha20poly1305_ietf_decrypt(
+        //        decrypted, &decrypted_len, NULL, (unsigned char *)buffer,
+        //        length, ADDITIONAL_DATA, ADDITIONAL_DATA_LEN, nonce, (unsigned
+        //        char *)key) != 0) {
+        //  printf("File contents:\n%s", decrypted);
+        //  printf("contents decrypted successfully\n");
+      }
+      fclose(f);
+    } else {
+      printf("Error reading cyphertext");
+      return 1;
     }
   } else {
     usage();
